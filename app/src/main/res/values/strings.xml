@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Tỷ Giá</string>
+    <string name="gold">Vàng</string>
+    <string name="usd">USD</string>
+    <string name="buy">Mua</string>
+    <string name="sell">Bán</string>
+    <string name="unit">Đơn vị</string>
+    <string name="usd_per_oz">USD / oz</string>
+    <string name="vnd_per_tael_of_gold">VND / lượng</string>
+    <string name="vnd_per_usd">VND / USD</string>
+    <string name="copied">Đã sao chép</string>
+</resources>
