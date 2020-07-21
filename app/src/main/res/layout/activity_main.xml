@@ -15,11 +15,23 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
+        <FrameLayout
+            android:id="@+id/btn_share"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:textSize="14sp" />
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_share" />
+        </FrameLayout>
 
         <TextView
             android:layout_width="match_parent"

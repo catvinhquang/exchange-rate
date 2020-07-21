@@ -1,16 +1,24 @@
 package com.catvinhquang.exchangerate
 
 import android.animation.LayoutTransition
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.catvinhquang.exchangerate.service.ServiceManager
 import kotlinx.android.synthetic.main.activity_main.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Created by QuangCV on 14-Jul-2020
@@ -32,6 +40,7 @@ class MainActivity : AppCompatActivity(), ServiceManager.OnPricesLoadedListener 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         container.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        btn_share.setOnClickListener { share() }
         tv_global_buying_price.setOnClickListener(clickListener)
         tv_global_selling_price.setOnClickListener(clickListener)
         tv_local_buying_price.setOnClickListener(clickListener)
@@ -82,6 +91,28 @@ class MainActivity : AppCompatActivity(), ServiceManager.OnPricesLoadedListener 
         }
         if (result == "0") result = "#unknown"
         return result
+    }
+
+    @Suppress("DEPRECATION")
+    @SuppressLint("SimpleDateFormat")
+    private fun share() {
+        // export bitmap from view
+        val bitmap = Bitmap.createBitmap(
+            container.width, container.height,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        container.draw(canvas)
+
+        // save bitmap to media store and share it
+        val time = SimpleDateFormat("YYYYMMdd_HHmmss").format(Date())
+        val path = MediaStore.Images.Media.insertImage(
+            contentResolver, bitmap, "ER_$time", null
+        )
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "image/jpg"
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(path))
+        startActivity(Intent.createChooser(intent, "Share"))
     }
 
 }
