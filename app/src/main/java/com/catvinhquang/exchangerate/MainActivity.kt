@@ -40,14 +40,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         layout_table.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-        layout_table.setOnLongClickListener {
-            share()
-            layout_table.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        layout_price.setOnLongClickListener {
+            share(it)
+            it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
             true
         }
-        btn_chest.setOnClickListener {
-            collectUserAssets()
+        layout_user_assets.setOnLongClickListener {
+            share(layout_table)
+            it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            true
         }
+        btn_chest.setOnClickListener { collectUserAssets() }
 
         loadData()
     }
@@ -110,15 +113,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun share() {
+    private fun share(v: View) {
         val disposable = Observable.fromCallable {
             // export bitmap from view
-            val bitmap = Bitmap.createBitmap(
-                layout_price.width, layout_price.height,
-                Bitmap.Config.ARGB_8888
-            )
+            val bitmap = Bitmap.createBitmap(v.width, v.height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-            layout_price.draw(canvas)
+            v.draw(canvas)
 
             // save bitmap to cache directory
             val folder = File(cacheDir, "images")

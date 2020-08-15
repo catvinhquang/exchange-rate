@@ -4,9 +4,9 @@
     android:id="@+id/layout_table"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="8dp"
     android:animateLayoutChanges="true"
     android:orientation="vertical"
-    android:padding="8dp"
     tools:layout_gravity="center">
 
     <LinearLayout
