@@ -4,9 +4,15 @@
     <string name="usd">USD</string>
     <string name="buy">Mua</string>
     <string name="sell">Bán</string>
-    <string name="unit">Đơn vị</string>
-    <string name="usd_per_oz">USD / oz</string>
-    <string name="vnd_per_tael_of_gold">VND / lượng</string>
-    <string name="vnd_per_usd">VND / USD</string>
     <string name="copied">Đã sao chép</string>
+    <string name="asset">Tài sản</string>
+    <string name="share">Chia sẻ</string>
+    <string name="asset_statistics">Thống kê tài sản</string>
+    <string name="sjc_gold">Vàng SJC</string>
+    <string name="tale_of_gold">Lượng</string>
+    <string name="us_dollar">Đô la Mỹ</string>
+    <string name="saving_money">Tiền tiết kiệm</string>
+    <string name="vnd">VNĐ</string>
+    <string name="clear">Xóa</string>
+    <string name="complete">Hoàn tất</string>
 </resources>

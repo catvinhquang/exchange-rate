@@ -1,4 +1,4 @@
-package com.catvinhquang.exchangerate.service
+package com.catvinhquang.exchangerate.data.network.utils
 
 import android.content.Context
 import android.net.ConnectivityManager

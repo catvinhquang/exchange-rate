@@ -1,14 +1,17 @@
-package com.catvinhquang.exchangerate.service
+package com.catvinhquang.exchangerate.data.network
 
-import android.annotation.SuppressLint
-import android.content.Context
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import okhttp3.Cache
+import android.util.Log
+import com.catvinhquang.exchangerate.data.sharedmodel.GoldPrice
+import com.catvinhquang.exchangerate.data.sharedmodel.UsdPrice
+import io.reactivex.Observable
+import io.reactivex.ObservableSource
+import io.reactivex.functions.Function
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.util.regex.Pattern
@@ -20,27 +23,27 @@ import javax.net.ssl.X509TrustManager
  * Created by QuangCV on 14-Jul-2020
  **/
 
-class ServiceManager(
-    context: Context,
-    private val listener: OnPricesLoadedListener
-) {
+object NetworkManager {
 
-    private val goldService: GoldService
-    private val bankService: BankService
+    private const val showLog = false
+    private val TAG = NetworkManager.javaClass.simpleName
 
-    init {
-        goldService = initGoldService(context)
-        bankService = initBankService(context)
+    private lateinit var goldService: GoldService
+    private lateinit var bankService: BankService
+
+    fun init() {
+        goldService = initGoldService()
+        bankService = initBankService()
     }
 
-    private fun initGoldService(context: Context): GoldService {
-        val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
-        val client: OkHttpClient = OkHttpClient.Builder()
-            .addInterceptor(CacheInterceptor(context))
-            .addInterceptor(loggingInterceptor)
-            .cache(Cache(context.cacheDir, Long.MAX_VALUE))
-            .build()
+    private fun initGoldService(): GoldService {
+        val client = if (showLog) {
+            val loggingInterceptor = HttpLoggingInterceptor()
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+            OkHttpClient.Builder().addInterceptor(loggingInterceptor).build()
+        } else {
+            OkHttpClient.Builder().build()
+        }
         val retrofit = Retrofit.Builder()
             .client(client)
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
@@ -49,7 +52,7 @@ class ServiceManager(
         return retrofit.create<GoldService>(GoldService::class.java)
     }
 
-    private fun initBankService(context: Context): BankService {
+    private fun initBankService(): BankService {
         fun initBuilder(): OkHttpClient.Builder {
             val builder = OkHttpClient.Builder()
             try {
@@ -85,13 +88,13 @@ class ServiceManager(
             return builder
         }
 
-        val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
-        val client: OkHttpClient = initBuilder()
-            .addInterceptor(CacheInterceptor(context))
-            .addInterceptor(loggingInterceptor)
-            .cache(Cache(context.cacheDir, Long.MAX_VALUE))
-            .build()
+        val client = if (showLog) {
+            val loggingInterceptor = HttpLoggingInterceptor()
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+            initBuilder().addInterceptor(loggingInterceptor).build()
+        } else {
+            initBuilder().build()
+        }
         val retrofit = Retrofit.Builder()
             .client(client)
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
@@ -100,17 +103,9 @@ class ServiceManager(
         return retrofit.create<BankService>(BankService::class.java)
     }
 
-    fun loadPrices() {
-        loadGoldPrices()
-        loadUsdPrices()
-    }
-
-    @SuppressLint("CheckResult")
-    private fun loadGoldPrices() {
-        goldService.getGoldPrices()
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
+    fun getGoldPrice(): Observable<GoldPrice> {
+        return goldService.getGoldPrices()
+            .map {
                 val response = it.string()
                 var globalBuyingPrice = 0F
                 var globalSellingPrice = 0F
@@ -121,7 +116,7 @@ class ServiceManager(
                     .matcher(response)
                     .apply {
                         if (find()) {
-                            val prices = group(1).trim().split("/")
+                            val prices = group(1)!!.trim().split("/")
                             globalBuyingPrice = prices[0].toFloat()
                             globalSellingPrice = prices[1].toFloat()
                         }
@@ -131,36 +126,32 @@ class ServiceManager(
                     .matcher(response)
                     .apply {
                         if (find()) {
-                            localBuyingPrice = group(1).trim()
+                            localBuyingPrice = group(1)!!.trim()
                                 .replace(",", "")
                                 .toInt()
                         }
 
                         if (find()) {
-                            localSellingPrice = group(1).trim()
+                            localSellingPrice = group(1)!!.trim()
                                 .replace(",", "")
                                 .toInt()
                         }
                     }
 
-                listener.onGoldPricesUpdated(
-                    globalBuyingPrice,
-                    globalSellingPrice,
-                    localBuyingPrice,
-                    localSellingPrice
+                GoldPrice(
+                    globalBuyingPrice, globalSellingPrice,
+                    localBuyingPrice, localSellingPrice
                 )
-            }, {
-                it.printStackTrace()
-                listener.onGoldPricesUpdated(0f, 0f, 0, 0)
+            }
+            .onErrorResumeNext(Function<Throwable, ObservableSource<GoldPrice>> {
+                handleError(it)
+                Observable.empty()
             })
     }
 
-    @SuppressLint("CheckResult")
-    private fun loadUsdPrices() {
-        bankService.getExchangeRates()
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
+    fun getUsdPrice(): Observable<UsdPrice> {
+        return bankService.getExchangeRates()
+            .map {
                 val response = it.string()
                 var buyingPrice = 0
                 var sellingPrice = 0
@@ -172,11 +163,11 @@ class ServiceManager(
                     .matcher(response)
                     .apply {
                         if (find()) {
-                            val prices = group(1).trim()
+                            val prices = group(1)!!.trim()
                             val pricePattern = Pattern.compile("<td>(.*)</td>")
                             pricePattern.matcher(prices).apply {
                                 if (find()) {
-                                    buyingPrice = group(1).trim().run {
+                                    buyingPrice = group(1)!!.trim().run {
                                         substring(0, indexOf("."))
                                             .replace(",", "")
                                             .toInt()
@@ -187,7 +178,7 @@ class ServiceManager(
                                 find()
 
                                 if (find()) {
-                                    sellingPrice = group(1).trim().run {
+                                    sellingPrice = group(1)!!.trim().run {
                                         substring(0, indexOf("."))
                                             .replace(",", "")
                                             .toInt()
@@ -197,25 +188,21 @@ class ServiceManager(
                         }
                     }
 
-                listener.onUsdPricesUpdated(buyingPrice, sellingPrice)
-            }, {
-                it.printStackTrace()
-                listener.onUsdPricesUpdated(0, 0)
+                UsdPrice(buyingPrice, sellingPrice)
+            }
+            .onErrorResumeNext(Function<Throwable, ObservableSource<UsdPrice>> {
+                handleError(it)
+                Observable.empty()
             })
     }
 
-    interface OnPricesLoadedListener {
-
-        fun onGoldPricesUpdated(
-            globalBuyingPrice: Float, globalSellingPrice: Float,
-            localBuyingPrice: Int, localSellingPrice: Int
-        )
-
-        fun onUsdPricesUpdated(
-            buyingPrice: Int,
-            sellingPrice: Int
-        )
-
+    private fun handleError(t: Throwable) {
+        when (t) {
+            is UnknownHostException, is SocketTimeoutException -> {
+                Log.e(TAG, "handleError: no internet")
+            }
+            else -> t.printStackTrace()
+        }
     }
 
 }

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    tools:layout_gravity="center">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:text="@string/asset_statistics"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sjc_gold"
+        android:textColor="#808080"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/et_tael_of_gold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_edit_text"
+        android:gravity="right"
+        android:hint="@string/tale_of_gold"
+        android:inputType="numberDecimal"
+        android:padding="8dp"
+        android:textColor="@android:color/black"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/us_dollar"
+        android:textColor="#808080"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/et_usd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_edit_text"
+        android:gravity="right"
+        android:hint="@string/usd"
+        android:inputType="number"
+        android:padding="8dp"
+        android:textColor="@android:color/black"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/saving_money"
+        android:textColor="#808080"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/et_saving_money"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_edit_text"
+        android:gravity="right"
+        android:hint="@string/vnd"
+        android:inputType="number"
+        android:padding="8dp"
+        android:textColor="@android:color/black"
+        android:textSize="16sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_clear"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginRight="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/ripple_gray"
+            android:stateListAnimator="@null"
+            android:text="@string/clear"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btn_complete"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:background="@drawable/ripple_green"
+            android:stateListAnimator="@null"
+            android:text="@string/complete"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</LinearLayout>

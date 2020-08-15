@@ -1,118 +1,187 @@
 package com.catvinhquang.exchangerate
 
 import android.animation.LayoutTransition
-import android.annotation.SuppressLint
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
+import android.app.Dialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Log
+import android.view.HapticFeedbackConstants
 import android.view.View
-import android.widget.Toast
+import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
-import com.catvinhquang.exchangerate.service.ServiceManager
+import androidx.core.content.FileProvider
+import com.catvinhquang.exchangerate.data.DataProvider
+import com.catvinhquang.exchangerate.data.sharedmodel.GoldPrice
+import com.catvinhquang.exchangerate.data.sharedmodel.UsdPrice
+import com.catvinhquang.exchangerate.data.sharedmodel.UserAssets
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import java.text.SimpleDateFormat
-import java.util.*
+import kotlinx.android.synthetic.main.dialog_assets.*
+import java.io.File
+import java.io.FileOutputStream
 
 /**
  * Created by QuangCV on 14-Jul-2020
  **/
 
-private val TAG = MainActivity::class.java.simpleName
+class MainActivity : AppCompatActivity() {
 
-class MainActivity : AppCompatActivity(), ServiceManager.OnPricesLoadedListener {
+    private val compositeDisposable = CompositeDisposable()
 
-    private lateinit var service: ServiceManager
-    private val clickListener = View.OnClickListener {
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText(getString(R.string.app_name), it.tag.toString())
-        clipboard.setPrimaryClip(clip)
-        Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
-    }
+    private var goldPrice: GoldPrice? = null
+    private var usdPrice: UsdPrice? = null
+    private var userAssets: UserAssets? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        container.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-        btn_share.setOnClickListener { share() }
-        tv_global_buying_price.setOnClickListener(clickListener)
-        tv_global_selling_price.setOnClickListener(clickListener)
-        tv_local_buying_price.setOnClickListener(clickListener)
-        tv_local_selling_price.setOnClickListener(clickListener)
-        tv_buying_price.setOnClickListener(clickListener)
-        tv_selling_price.setOnClickListener(clickListener)
-
-        service = ServiceManager(this, this)
-        service.loadPrices()
-    }
-
-    override fun onGoldPricesUpdated(
-        globalBuyingPrice: Float, globalSellingPrice: Float,
-        localBuyingPrice: Int, localSellingPrice: Int
-    ) {
-        Log.d(
-            TAG,
-            "onGoldPricesUpdated: $globalBuyingPrice $globalSellingPrice" +
-                    " $localBuyingPrice $localSellingPrice"
-        )
-        tv_global_buying_price.text = globalBuyingPrice.toNumberString()
-        tv_global_buying_price.tag = globalBuyingPrice
-        tv_global_selling_price.text = globalSellingPrice.toNumberString()
-        tv_global_selling_price.tag = globalSellingPrice
-        tv_local_buying_price.text = localBuyingPrice.toNumberString()
-        tv_local_buying_price.tag = localBuyingPrice
-        tv_local_selling_price.text = localSellingPrice.toNumberString()
-        tv_local_selling_price.tag = localSellingPrice
-    }
-
-    override fun onUsdPricesUpdated(
-        buyingPrice: Int,
-        sellingPrice: Int
-    ) {
-        Log.d(TAG, "onUsdPricesUpdated: $buyingPrice $sellingPrice")
-        tv_buying_price.text = buyingPrice.toNumberString()
-        tv_buying_price.tag = buyingPrice
-        tv_selling_price.text = sellingPrice.toNumberString()
-        tv_selling_price.tag = sellingPrice
-    }
-
-    private fun Number.toNumberString(): String {
-        var result: String
-        result = if (this is Float && this != this.toLong().toFloat()) {
-            "%,.1f".format(this)
-        } else {
-            "%,d".format(this.toLong())
+        layout_table.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        layout_table.setOnLongClickListener {
+            share()
+            layout_table.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            true
         }
-        if (result == "0") result = "#unknown"
-        return result
+        btn_chest.setOnClickListener {
+            collectUserAssets()
+        }
+
+        loadData()
     }
 
-    @Suppress("DEPRECATION")
-    @SuppressLint("SimpleDateFormat")
-    private fun share() {
-        // export bitmap from view
-        val bitmap = Bitmap.createBitmap(
-            container.width, container.height,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bitmap)
-        container.draw(canvas)
+    override fun onDestroy() {
+        super.onDestroy()
+        compositeDisposable.clear()
+    }
 
-        // save bitmap to media store and share it
-        val time = SimpleDateFormat("YYYYMMdd_HHmmss").format(Date())
-        val path = MediaStore.Images.Media.insertImage(
-            contentResolver, bitmap, "ER_$time", null
-        )
-        val intent = Intent(Intent.ACTION_SEND)
-        intent.type = "image/jpg"
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(path))
-        startActivity(Intent.createChooser(intent, "Share"))
+    private fun loadData() {
+        val getGoldPrice = DataProvider.getGoldPrice().subscribe {
+            it.apply {
+                tv_global_buying_price.text = internationalBuyingPrice.toNumberString()
+                tv_global_buying_price.tag = internationalBuyingPrice
+                tv_global_selling_price.text = internationalSellingPrice.toNumberString()
+                tv_global_selling_price.tag = internationalSellingPrice
+                tv_local_buying_price.text = vietnamBuyingPrice.toNumberString()
+                tv_local_buying_price.tag = vietnamBuyingPrice
+                tv_local_selling_price.text = vietnamSellingPrice.toNumberString()
+                tv_local_selling_price.tag = vietnamSellingPrice
+                goldPrice = it
+                updateUserAssets()
+            }
+        }
+        compositeDisposable.add(getGoldPrice)
+
+        val getUsdPrice = DataProvider.getUsdPrice().subscribe {
+            it.apply {
+                tv_buying_price.text = buyingPrice.toNumberString()
+                tv_buying_price.tag = buyingPrice
+                tv_selling_price.text = sellingPrice.toNumberString()
+                tv_selling_price.tag = sellingPrice
+                usdPrice = it
+                updateUserAssets()
+            }
+        }
+        compositeDisposable.add(getUsdPrice)
+
+        val getUserAssets = DataProvider.getUserAssets().subscribe {
+            it.apply {
+                userAssets = it
+                updateUserAssets()
+            }
+        }
+        compositeDisposable.add(getUserAssets)
+    }
+
+    private fun updateUserAssets() {
+        if (userAssets != null && goldPrice != null && usdPrice != null) {
+            val x = goldPrice!!.vietnamBuyingPrice
+            val y = usdPrice!!.buyingPrice
+            val value = userAssets!!.run {
+                x * taelOfGold + y * usd + savingMoney
+            }.toNumberString()
+
+            tv_user_assets.text = value
+            layout_user_assets.visibility = View.VISIBLE
+        } else {
+            layout_user_assets.visibility = View.GONE
+        }
+    }
+
+    private fun share() {
+        val disposable = Observable.fromCallable {
+            // export bitmap from view
+            val bitmap = Bitmap.createBitmap(
+                layout_price.width, layout_price.height,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            layout_price.draw(canvas)
+
+            // save bitmap to cache directory
+            val folder = File(cacheDir, "images")
+            folder.mkdirs()
+            val file = File(folder, "image.png")
+            val stream = FileOutputStream("$file")
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            stream.close()
+            file
+        }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ file ->
+                // share image
+                FileProvider.getUriForFile(
+                    this,
+                    "com.catvinhquang.exchangerate.fileprovider",
+                    file
+                )?.apply {
+                    val i = Intent(Intent.ACTION_SEND)
+                    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    i.setDataAndType(this, contentResolver.getType(this))
+                    i.putExtra(Intent.EXTRA_STREAM, this)
+                    startActivity(Intent.createChooser(i, getString(R.string.share)))
+                }
+            }, { it.printStackTrace() })
+        compositeDisposable.add(disposable)
+    }
+
+    private fun collectUserAssets() {
+        val dialog = Dialog(this, R.style.AppTheme_Dialog)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setContentView(R.layout.dialog_assets)
+
+        userAssets?.apply {
+            var text = taelOfGold.toString()
+            text = if (text.endsWith(".0")) text.replace(".0", "") else text
+            dialog.et_tael_of_gold.setText(text)
+            dialog.et_usd.setText(usd.toString())
+            dialog.et_saving_money.setText(savingMoney.toString())
+        } ?: dialog.et_tael_of_gold.requestFocus()
+
+        dialog.btn_clear.setOnClickListener {
+            DataProvider.setUserAssets(null)
+            userAssets = null
+            updateUserAssets()
+            dialog.dismiss()
+        }
+        dialog.btn_complete.setOnClickListener {
+            val taelOfGold = dialog.et_tael_of_gold.text.toString()
+                .toDoubleOrNull() ?: 0.0
+            val usd = dialog.et_usd.text.toString()
+                .toIntOrNull() ?: 0
+            val savingMoney = dialog.et_saving_money.text.toString()
+                .toIntOrNull() ?: 0
+            val userAssets = UserAssets(taelOfGold, usd, savingMoney)
+            DataProvider.setUserAssets(userAssets)
+            MainActivity@ this.userAssets = userAssets
+            updateUserAssets()
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 
 }

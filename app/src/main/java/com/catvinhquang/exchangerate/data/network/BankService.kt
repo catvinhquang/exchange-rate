@@ -1,4 +1,4 @@
-package com.catvinhquang.exchangerate.service
+package com.catvinhquang.exchangerate.data.network
 
 import io.reactivex.Observable
 import okhttp3.ResponseBody
