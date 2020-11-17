@@ -14,5 +14,8 @@ class UserAssets(
     var usd: Int = 0,
 
     @SerializedName("saving_money")
-    var savingMoney: Int = 0
+    var savingMoney: Int = 0,
+
+    @SerializedName("visible")
+    var visible: Boolean = true
 )

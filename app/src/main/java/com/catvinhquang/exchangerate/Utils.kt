@@ -6,10 +6,14 @@ import com.google.gson.Gson
  * Created by QuangCV on 15-Aug-2020
  **/
 
-object Utils {
+private val gson = Gson()
 
-    val gson = Gson()
+fun Any.toJson(): String {
+    return gson.toJson(this)
+}
 
+fun <T> String?.toObject(cls: Class<T>): T? {
+    return gson.fromJson(this, cls)
 }
 
 fun Number.toNumberString(): String {

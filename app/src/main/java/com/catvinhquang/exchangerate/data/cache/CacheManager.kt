@@ -2,8 +2,9 @@ package com.catvinhquang.exchangerate.data.cache
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.catvinhquang.exchangerate.Utils
 import com.catvinhquang.exchangerate.data.sharedmodel.UserAssets
+import com.catvinhquang.exchangerate.toJson
+import com.catvinhquang.exchangerate.toObject
 
 /**
  * Created by QuangCV on 13-Aug-2020
@@ -85,15 +86,11 @@ object CacheManager {
             if (json.isBlank()) {
                 null
             } else {
-                Utils.gson.fromJson(json, UserAssets::class.java)
+                json.toObject(UserAssets::class.java)
             }
         }
         set(value) = run {
-            val json = if (value == null) {
-                null
-            } else {
-                Utils.gson.toJson(value)
-            }
+            val json = value?.toJson()
             put(KEY_USER_ASSETS, json)
         }
 

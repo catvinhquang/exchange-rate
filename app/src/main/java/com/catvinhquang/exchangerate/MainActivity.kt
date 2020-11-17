@@ -1,14 +1,14 @@
 package com.catvinhquang.exchangerate
 
 import android.animation.LayoutTransition
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Rect
 import android.os.Bundle
-import android.view.HapticFeedbackConstants
-import android.view.View
-import android.view.Window
+import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.catvinhquang.exchangerate.data.DataProvider
@@ -39,25 +39,55 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        layout_table.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-        layout_price.setOnLongClickListener {
-            share(it)
-            it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            true
-        }
-        layout_user_assets.setOnLongClickListener {
-            share(layout_table)
-            it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            true
-        }
-        btn_chest.setOnClickListener { collectUserAssets() }
-
+        init()
         loadData()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.clear()
+    }
+
+    private fun init() {
+        layout_table.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        layout_table.setOnTouchListener(object : View.OnTouchListener {
+            val detector = GestureDetector(this@MainActivity,
+                object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onDown(e: MotionEvent): Boolean {
+                        return true
+                    }
+
+                    override fun onLongPress(e: MotionEvent) {
+                        layout_table.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+
+                        layout_price.apply {
+                            val rect = Rect(left, top, width, height)
+                            if (rect.contains(e.x.toInt(), e.y.toInt())) {
+                                share(this)
+                                return
+                            }
+                        }
+
+                        share(layout_table)
+                    }
+
+                    override fun onDoubleTap(e: MotionEvent): Boolean {
+                        userAssets?.apply {
+                            visible = !visible
+                            DataProvider.setUserAssets(userAssets)
+                            updateUserAssetsUi()
+                        }
+                        return true
+                    }
+                })
+
+            @SuppressLint("ClickableViewAccessibility")
+            override fun onTouch(v: View, event: MotionEvent): Boolean {
+                return detector.onTouchEvent(event)
+            }
+        })
+
+        btn_chest.setOnClickListener { collectUserAssets() }
     }
 
     private fun loadData() {
@@ -72,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                 tv_local_selling_price.text = vietnamSellingPrice.toNumberString()
                 tv_local_selling_price.tag = vietnamSellingPrice
                 goldPrice = it
-                updateUserAssets()
+                updateUserAssetsUi()
             }
         }
         compositeDisposable.add(getGoldPrice)
@@ -84,7 +114,7 @@ class MainActivity : AppCompatActivity() {
                 tv_selling_price.text = sellingPrice.toNumberString()
                 tv_selling_price.tag = sellingPrice
                 usdPrice = it
-                updateUserAssets()
+                updateUserAssetsUi()
             }
         }
         compositeDisposable.add(getUsdPrice)
@@ -92,14 +122,15 @@ class MainActivity : AppCompatActivity() {
         val getUserAssets = DataProvider.getUserAssets().subscribe {
             it.apply {
                 userAssets = it
-                updateUserAssets()
+                updateUserAssetsUi()
             }
         }
         compositeDisposable.add(getUserAssets)
     }
 
-    private fun updateUserAssets() {
-        if (userAssets != null && goldPrice != null && usdPrice != null) {
+    private fun updateUserAssetsUi() {
+        val visible = userAssets?.visible ?: false
+        if (visible && goldPrice != null && usdPrice != null) {
             val x = goldPrice!!.vietnamBuyingPrice
             val y = usdPrice!!.buyingPrice
             val value = userAssets!!.run {
@@ -111,6 +142,47 @@ class MainActivity : AppCompatActivity() {
         } else {
             layout_user_assets.visibility = View.GONE
         }
+    }
+
+    private fun collectUserAssets() {
+        val dialog = Dialog(this, R.style.AppTheme_Dialog)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setContentView(R.layout.dialog_assets)
+
+        userAssets?.apply {
+            var text = taelOfGold.toString()
+            text = if (text.endsWith(".0")) text.replace(".0", "") else text
+            dialog.et_tael_of_gold.setText(text)
+            dialog.et_usd.setText(usd.toString())
+            dialog.et_saving_money.setText(savingMoney.toString())
+        } ?: dialog.et_tael_of_gold.requestFocus()
+
+        dialog.btn_clear.setOnClickListener {
+            DataProvider.setUserAssets(null)
+            userAssets = null
+            updateUserAssetsUi()
+            dialog.dismiss()
+        }
+        dialog.btn_complete.setOnClickListener {
+            val newTaelOfGold = dialog.et_tael_of_gold.text.toString()
+                .toDoubleOrNull() ?: 0.0
+            val newUsd = dialog.et_usd.text.toString()
+                .toIntOrNull() ?: 0
+            val newSavingMoney = dialog.et_saving_money.text.toString()
+                .toIntOrNull() ?: 0
+
+            userAssets = userAssets?.apply {
+                taelOfGold = newTaelOfGold
+                usd = newUsd
+                savingMoney = newSavingMoney
+            } ?: UserAssets(newTaelOfGold, newUsd, newSavingMoney)
+
+            DataProvider.setUserAssets(userAssets)
+            updateUserAssetsUi()
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 
     private fun share(v: View) {
@@ -146,42 +218,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }, { it.printStackTrace() })
         compositeDisposable.add(disposable)
-    }
-
-    private fun collectUserAssets() {
-        val dialog = Dialog(this, R.style.AppTheme_Dialog)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.setContentView(R.layout.dialog_assets)
-
-        userAssets?.apply {
-            var text = taelOfGold.toString()
-            text = if (text.endsWith(".0")) text.replace(".0", "") else text
-            dialog.et_tael_of_gold.setText(text)
-            dialog.et_usd.setText(usd.toString())
-            dialog.et_saving_money.setText(savingMoney.toString())
-        } ?: dialog.et_tael_of_gold.requestFocus()
-
-        dialog.btn_clear.setOnClickListener {
-            DataProvider.setUserAssets(null)
-            userAssets = null
-            updateUserAssets()
-            dialog.dismiss()
-        }
-        dialog.btn_complete.setOnClickListener {
-            val taelOfGold = dialog.et_tael_of_gold.text.toString()
-                .toDoubleOrNull() ?: 0.0
-            val usd = dialog.et_usd.text.toString()
-                .toIntOrNull() ?: 0
-            val savingMoney = dialog.et_saving_money.text.toString()
-                .toIntOrNull() ?: 0
-            val userAssets = UserAssets(taelOfGold, usd, savingMoney)
-            DataProvider.setUserAssets(userAssets)
-            MainActivity@ this.userAssets = userAssets
-            updateUserAssets()
-            dialog.dismiss()
-        }
-        dialog.show()
     }
 
 }
