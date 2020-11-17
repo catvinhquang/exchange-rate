@@ -186,18 +186,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun share(v: View) {
+        tv_time.text = System.currentTimeMillis().toTimeString("dd-MM-yyyy\nHH:mm:ss")
+
         val disposable = Observable.fromCallable {
             // export bitmap from view
-            val bitmap = Bitmap.createBitmap(v.width, v.height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            v.draw(canvas)
+            val bitmapTime = tv_time.getBitmap()
+            val bitmapResult = v.getBitmap()
+            val canvas = Canvas(bitmapResult)
+            canvas.drawBitmap(bitmapTime, 0F, 0F, null)
 
             // save bitmap to cache directory
             val folder = File(cacheDir, "images")
             folder.mkdirs()
             val file = File(folder, "image.png")
             val stream = FileOutputStream("$file")
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            bitmapResult.compress(Bitmap.CompressFormat.PNG, 100, stream)
             stream.close()
             file
         }
