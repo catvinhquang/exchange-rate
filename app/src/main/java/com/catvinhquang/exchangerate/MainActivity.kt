@@ -46,6 +46,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // prevent screen capture
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         val iconSize = toPx(12F)
         iconUp = ContextCompat.getDrawable(this, R.drawable.ic_up)!!
         iconUp.setBounds(0, 0, iconSize, iconSize)
