@@ -29,9 +29,16 @@ object DataProvider {
     fun getGoldPrice(): Observable<GoldPrice> {
         return Observable.create<GoldPrice> { emitter ->
             val cache = GoldPrice(
-                CacheManager.goldGlobalBuyingPrice, CacheManager.goldGlobalSellingPrice,
-                CacheManager.goldLocalBuyingPrice, CacheManager.goldLocalSellingPrice
-            )
+                CacheManager.goldGlobalBuyingPrice,
+                CacheManager.goldGlobalSellingPrice,
+                CacheManager.goldLocalBuyingPrice,
+                CacheManager.goldLocalSellingPrice
+            ).apply {
+                globalBuyingPriceUp = CacheManager.goldGlobalBuyingPriceUp
+                globalSellingPriceUp = CacheManager.goldGlobalSellingPriceUp
+                localBuyingPriceUp = CacheManager.goldLocalBuyingPriceUp
+                localSellingPriceUp = CacheManager.goldLocalSellingPriceUp
+            }
             emitter.onNext(cache)
             Log.d(TAG, "getGoldPrice: [cache] $cache")
 
@@ -39,10 +46,14 @@ object DataProvider {
                 .takeUntil { emitter.isDisposed }
                 .flatMap { NetworkManager.getGoldPrice() }
                 .subscribe {
-                    CacheManager.goldGlobalBuyingPrice = it.internationalBuyingPrice
-                    CacheManager.goldGlobalSellingPrice = it.internationalSellingPrice
-                    CacheManager.goldLocalBuyingPrice = it.vietnamBuyingPrice
-                    CacheManager.goldLocalSellingPrice = it.vietnamSellingPrice
+                    CacheManager.goldGlobalBuyingPrice = it.globalBuyingPrice
+                    CacheManager.goldGlobalSellingPrice = it.globalSellingPrice
+                    CacheManager.goldLocalBuyingPrice = it.localBuyingPrice
+                    CacheManager.goldLocalSellingPrice = it.localSellingPrice
+                    it.globalBuyingPriceUp = CacheManager.goldGlobalBuyingPriceUp
+                    it.globalSellingPriceUp = CacheManager.goldGlobalSellingPriceUp
+                    it.localBuyingPriceUp = CacheManager.goldLocalBuyingPriceUp
+                    it.localSellingPriceUp = CacheManager.goldLocalSellingPriceUp
                     emitter.onNext(it)
                     Log.d(TAG, "getGoldPrice: [network] $it")
                 }
@@ -56,7 +67,10 @@ object DataProvider {
             val cache = UsdPrice(
                 CacheManager.usdBuyingPrice,
                 CacheManager.usdSellingPrice
-            )
+            ).apply {
+                buyingPriceUp = CacheManager.usdBuyingPriceUp
+                sellingPriceUp = CacheManager.usdSellingPriceUp
+            }
             emitter.onNext(cache)
             Log.d(TAG, "getUsdPrice: [cache] $cache")
 
@@ -66,6 +80,8 @@ object DataProvider {
                 .subscribe {
                     CacheManager.usdBuyingPrice = it.buyingPrice
                     CacheManager.usdSellingPrice = it.sellingPrice
+                    it.buyingPriceUp = CacheManager.usdBuyingPriceUp
+                    it.sellingPriceUp = CacheManager.usdSellingPriceUp
                     emitter.onNext(it)
                     Log.d(TAG, "getUsdPrice: [network] $it")
                 }

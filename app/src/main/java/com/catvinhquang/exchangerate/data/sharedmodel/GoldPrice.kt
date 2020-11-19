@@ -5,17 +5,26 @@ package com.catvinhquang.exchangerate.data.sharedmodel
  **/
 
 class GoldPrice(
-    var internationalBuyingPrice: Float,
-    var internationalSellingPrice: Float,
-    var vietnamBuyingPrice: Int,
-    var vietnamSellingPrice: Int
+    var globalBuyingPrice: Float,
+    var globalSellingPrice: Float,
+    var localBuyingPrice: Int,
+    var localSellingPrice: Int
 ) {
 
+    var globalBuyingPriceUp = true
+    var globalSellingPriceUp = true
+    var localBuyingPriceUp = true
+    var localSellingPriceUp = true
+
     override fun toString(): String {
-        return "internationalBuyingPrice = $internationalBuyingPrice, " +
-                "internationalSellingPrice = $internationalSellingPrice, " +
-                "vietnamBuyingPrice = $vietnamBuyingPrice, " +
-                "vietnamSellingPrice = $vietnamSellingPrice"
+        return "globalBuyingPrice = $globalBuyingPrice, " +
+                "globalBuyingPriceUp = $globalBuyingPriceUp, " +
+                "globalSellingPrice = $globalSellingPrice, " +
+                "globalSellingPriceUp = $globalSellingPriceUp, " +
+                "localBuyingPrice = $localBuyingPrice, " +
+                "localBuyingPriceUp = $localBuyingPriceUp, " +
+                "localSellingPrice = $localSellingPrice, " +
+                "localSellingPriceUp = $localSellingPriceUp"
     }
 
 }

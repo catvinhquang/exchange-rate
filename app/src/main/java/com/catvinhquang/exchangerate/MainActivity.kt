@@ -7,9 +7,12 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.*
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.catvinhquang.exchangerate.data.DataProvider
 import com.catvinhquang.exchangerate.data.sharedmodel.GoldPrice
@@ -23,6 +26,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.dialog_assets.*
 import java.io.File
 import java.io.FileOutputStream
+import java.math.BigDecimal
 
 /**
  * Created by QuangCV on 14-Jul-2020
@@ -32,12 +36,22 @@ class MainActivity : AppCompatActivity() {
 
     private val compositeDisposable = CompositeDisposable()
 
+    private lateinit var iconUp: Drawable
+    private lateinit var iconDown: Drawable
+
     private var goldPrice: GoldPrice? = null
     private var usdPrice: UsdPrice? = null
     private var userAssets: UserAssets? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val iconSize = toPx(12F)
+        iconUp = ContextCompat.getDrawable(this, R.drawable.ic_up)!!
+        iconUp.setBounds(0, 0, iconSize, iconSize)
+        iconDown = ContextCompat.getDrawable(this, R.drawable.ic_down)!!
+        iconDown.setBounds(0, 0, iconSize, iconSize)
+
         setContentView(R.layout.activity_main)
         init()
         loadData()
@@ -93,14 +107,27 @@ class MainActivity : AppCompatActivity() {
     private fun loadData() {
         val getGoldPrice = DataProvider.getGoldPrice().subscribe {
             it.apply {
-                tv_global_buying_price.text = internationalBuyingPrice.toNumberString()
-                tv_global_buying_price.tag = internationalBuyingPrice
-                tv_global_selling_price.text = internationalSellingPrice.toNumberString()
-                tv_global_selling_price.tag = internationalSellingPrice
-                tv_local_buying_price.text = vietnamBuyingPrice.toNumberString()
-                tv_local_buying_price.tag = vietnamBuyingPrice
-                tv_local_selling_price.text = vietnamSellingPrice.toNumberString()
-                tv_local_selling_price.tag = vietnamSellingPrice
+                updateIcon(
+                    tv_global_buying_price,
+                    globalBuyingPrice.toNumberString(),
+                    globalBuyingPriceUp
+                )
+                updateIcon(
+                    tv_global_selling_price,
+                    globalSellingPrice.toNumberString(),
+                    globalSellingPriceUp
+                )
+                updateIcon(
+                    tv_local_buying_price,
+                    localBuyingPrice.toNumberString(),
+                    localBuyingPriceUp
+                )
+                updateIcon(
+                    tv_local_selling_price,
+                    localSellingPrice.toNumberString(),
+                    localSellingPriceUp
+                )
+
                 goldPrice = it
                 updateUserAssetsUi()
             }
@@ -109,10 +136,17 @@ class MainActivity : AppCompatActivity() {
 
         val getUsdPrice = DataProvider.getUsdPrice().subscribe {
             it.apply {
-                tv_buying_price.text = buyingPrice.toNumberString()
-                tv_buying_price.tag = buyingPrice
-                tv_selling_price.text = sellingPrice.toNumberString()
-                tv_selling_price.tag = sellingPrice
+                updateIcon(
+                    tv_buying_price,
+                    buyingPrice.toNumberString(),
+                    buyingPriceUp
+                )
+                updateIcon(
+                    tv_selling_price,
+                    sellingPrice.toNumberString(),
+                    sellingPriceUp
+                )
+
                 usdPrice = it
                 updateUserAssetsUi()
             }
@@ -131,10 +165,12 @@ class MainActivity : AppCompatActivity() {
     private fun updateUserAssetsUi() {
         val visible = userAssets?.visible ?: false
         if (visible && goldPrice != null && usdPrice != null) {
-            val x = goldPrice!!.vietnamBuyingPrice
+            val x = goldPrice!!.localBuyingPrice
             val y = usdPrice!!.buyingPrice
             val value = userAssets!!.run {
-                x * taelOfGold + y * usd + savingMoney
+                BigDecimal(x).multiply(BigDecimal(taelOfGold)) +
+                        BigDecimal(y).multiply(BigDecimal(usd)) +
+                        BigDecimal(savingMoney)
             }.toNumberString()
 
             tv_user_assets.text = value
@@ -147,15 +183,14 @@ class MainActivity : AppCompatActivity() {
     private fun collectUserAssets() {
         val dialog = Dialog(this, R.style.AppTheme_Dialog)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setCanceledOnTouchOutside(false)
         dialog.setContentView(R.layout.dialog_assets)
 
         userAssets?.apply {
-            var text = taelOfGold.toString()
+            var text = taelOfGold
             text = if (text.endsWith(".0")) text.replace(".0", "") else text
             dialog.et_tael_of_gold.setText(text)
-            dialog.et_usd.setText(usd.toString())
-            dialog.et_saving_money.setText(savingMoney.toString())
+            dialog.et_usd.setText(usd)
+            dialog.et_saving_money.setText(savingMoney)
         } ?: dialog.et_tael_of_gold.requestFocus()
 
         dialog.btn_clear.setOnClickListener {
@@ -165,12 +200,9 @@ class MainActivity : AppCompatActivity() {
             dialog.dismiss()
         }
         dialog.btn_complete.setOnClickListener {
-            val newTaelOfGold = dialog.et_tael_of_gold.text.toString()
-                .toDoubleOrNull() ?: 0.0
-            val newUsd = dialog.et_usd.text.toString()
-                .toIntOrNull() ?: 0
-            val newSavingMoney = dialog.et_saving_money.text.toString()
-                .toIntOrNull() ?: 0
+            val newTaelOfGold = dialog.et_tael_of_gold.getNumberString()
+            val newUsd = dialog.et_usd.getNumberString()
+            val newSavingMoney = dialog.et_saving_money.getNumberString()
 
             userAssets = userAssets?.apply {
                 taelOfGold = newTaelOfGold
@@ -221,6 +253,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }, { it.printStackTrace() })
         compositeDisposable.add(disposable)
+    }
+
+    private fun updateIcon(v: TextView, content: String, up: Boolean) {
+        v.text = content
+        val icon = if (up) iconUp else iconDown
+        v.setCompoundDrawables(null, null, icon, null)
     }
 
 }

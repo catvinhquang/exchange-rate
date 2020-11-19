@@ -13,11 +13,17 @@ import com.catvinhquang.exchangerate.toObject
 object CacheManager {
 
     private const val KEY_GOLD_GLOBAL_BUYING_PRICE = "KEY_GOLD_GLOBAL_BUYING_PRICE"
+    private const val KEY_GOLD_GLOBAL_BUYING_PRICE_UP = "KEY_GOLD_GLOBAL_BUYING_PRICE_UP"
     private const val KEY_GOLD_GLOBAL_SELLING_PRICE = "KEY_GOLD_GLOBAL_SELLING_PRICE"
+    private const val KEY_GOLD_GLOBAL_SELLING_PRICE_UP = "KEY_GOLD_GLOBAL_SELLING_PRICE_UP"
     private const val KEY_GOLD_LOCAL_BUYING_PRICE = "KEY_GOLD_LOCAL_BUYING_PRICE"
+    private const val KEY_GOLD_LOCAL_BUYING_PRICE_UP = "KEY_GOLD_LOCAL_BUYING_PRICE_UP"
     private const val KEY_GOLD_LOCAL_SELLING_PRICE = "KEY_GOLD_LOCAL_SELLING_PRICE"
+    private const val KEY_GOLD_LOCAL_SELLING_PRICE_UP = "KEY_GOLD_LOCAL_SELLING_PRICE_UP"
     private const val KEY_USD_BUYING_PRICE = "KEY_USD_BUYING_PRICE"
+    private const val KEY_USD_BUYING_PRICE_UP = "KEY_USD_BUYING_PRICE_UP"
     private const val KEY_USD_SELLING_PRICE = "KEY_USD_SELLING_PRICE"
+    private const val KEY_USD_SELLING_PRICE_UP = "KEY_USD_SELLING_PRICE_UP"
 
     private const val KEY_USER_ASSETS = "KEY_USER_ASSETS"
 
@@ -58,27 +64,99 @@ object CacheManager {
 
     var goldGlobalBuyingPrice
         get() = get(KEY_GOLD_GLOBAL_BUYING_PRICE, 0F)
-        set(value) = put(KEY_GOLD_GLOBAL_BUYING_PRICE, value)
+        set(value) {
+            val old = goldGlobalBuyingPrice
+            put(KEY_GOLD_GLOBAL_BUYING_PRICE, value)
+            goldGlobalBuyingPriceUp = when {
+                value > old -> true
+                value == old -> goldGlobalBuyingPriceUp
+                else -> false
+            }
+        }
+
+    var goldGlobalBuyingPriceUp
+        get() = get(KEY_GOLD_GLOBAL_BUYING_PRICE_UP, true)
+        set(value) = put(KEY_GOLD_GLOBAL_BUYING_PRICE_UP, value)
 
     var goldGlobalSellingPrice
         get() = get(KEY_GOLD_GLOBAL_SELLING_PRICE, 0F)
-        set(value) = put(KEY_GOLD_GLOBAL_SELLING_PRICE, value)
+        set(value) {
+            val old = goldGlobalSellingPrice
+            put(KEY_GOLD_GLOBAL_SELLING_PRICE, value)
+            goldGlobalSellingPriceUp = when {
+                value > old -> true
+                value == old -> goldGlobalSellingPriceUp
+                else -> false
+            }
+        }
+
+    var goldGlobalSellingPriceUp
+        get() = get(KEY_GOLD_GLOBAL_SELLING_PRICE_UP, true)
+        set(value) = put(KEY_GOLD_GLOBAL_SELLING_PRICE_UP, value)
 
     var goldLocalBuyingPrice
         get() = get(KEY_GOLD_LOCAL_BUYING_PRICE, 0)
-        set(value) = put(KEY_GOLD_LOCAL_BUYING_PRICE, value)
+        set(value) {
+            val old = goldLocalBuyingPrice
+            put(KEY_GOLD_LOCAL_BUYING_PRICE, value)
+            goldLocalBuyingPriceUp = when {
+                value > old -> true
+                value == old -> goldLocalBuyingPriceUp
+                else -> false
+            }
+        }
+
+    var goldLocalBuyingPriceUp
+        get() = get(KEY_GOLD_LOCAL_BUYING_PRICE_UP, true)
+        set(value) = put(KEY_GOLD_LOCAL_BUYING_PRICE_UP, value)
 
     var goldLocalSellingPrice
         get() = get(KEY_GOLD_LOCAL_SELLING_PRICE, 0)
-        set(value) = put(KEY_GOLD_LOCAL_SELLING_PRICE, value)
+        set(value) {
+            val old = goldLocalSellingPrice
+            put(KEY_GOLD_LOCAL_SELLING_PRICE, value)
+            goldLocalSellingPriceUp = when {
+                value > old -> true
+                value == old -> goldLocalSellingPriceUp
+                else -> false
+            }
+        }
+
+    var goldLocalSellingPriceUp
+        get() = get(KEY_GOLD_LOCAL_SELLING_PRICE_UP, true)
+        set(value) = put(KEY_GOLD_LOCAL_SELLING_PRICE_UP, value)
 
     var usdBuyingPrice
         get() = get(KEY_USD_BUYING_PRICE, 0)
-        set(value) = put(KEY_USD_BUYING_PRICE, value)
+        set(value) {
+            val old = usdBuyingPrice
+            put(KEY_USD_BUYING_PRICE, value)
+            usdBuyingPriceUp = when {
+                value > old -> true
+                value == old -> usdBuyingPriceUp
+                else -> false
+            }
+        }
+
+    var usdBuyingPriceUp
+        get() = get(KEY_USD_BUYING_PRICE_UP, true)
+        set(value) = put(KEY_USD_BUYING_PRICE_UP, value)
 
     var usdSellingPrice
         get() = get(KEY_USD_SELLING_PRICE, 0)
-        set(value) = put(KEY_USD_SELLING_PRICE, value)
+        set(value) {
+            val old = usdSellingPrice
+            put(KEY_USD_SELLING_PRICE, value)
+            usdSellingPriceUp = when {
+                value > old -> true
+                value == old -> usdSellingPriceUp
+                else -> false
+            }
+        }
+
+    var usdSellingPriceUp
+        get() = get(KEY_USD_SELLING_PRICE_UP, true)
+        set(value) = put(KEY_USD_SELLING_PRICE_UP, value)
 
     var userAssets
         get() = run {

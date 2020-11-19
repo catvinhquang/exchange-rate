@@ -1,9 +1,12 @@
 package com.catvinhquang.exchangerate
 
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View
 import com.google.gson.Gson
+import java.text.DecimalFormat
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,4 +46,16 @@ fun View.getBitmap(): Bitmap {
 fun Long.toTimeString(format: String): String {
     val formatter = SimpleDateFormat(format, Locale.getDefault())
     return formatter.format(this)
+}
+
+fun Number.addSeparators(): String {
+    val formatter = NumberFormat.getInstance(Locale.US) as DecimalFormat
+    val symbols = formatter.decimalFormatSymbols
+    symbols.groupingSeparator = ','
+    formatter.decimalFormatSymbols = symbols
+    return formatter.format(this)
+}
+
+fun toPx(dp: Float): Int {
+    return (Resources.getSystem().displayMetrics.density * dp).toInt()
 }
