@@ -2,7 +2,6 @@ package com.catvinhquang.exchangerate
 
 import android.animation.LayoutTransition
 import android.annotation.SuppressLint
-import android.app.Dialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -18,12 +17,12 @@ import com.catvinhquang.exchangerate.data.DataProvider
 import com.catvinhquang.exchangerate.data.sharedmodel.GoldPrice
 import com.catvinhquang.exchangerate.data.sharedmodel.UsdPrice
 import com.catvinhquang.exchangerate.data.sharedmodel.UserAssets
+import com.catvinhquang.exchangerate.dialogs.CollectUserAssetsDialog
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.dialog_assets.*
 import java.io.File
 import java.io.FileOutputStream
 import java.math.BigDecimal
@@ -187,40 +186,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun collectUserAssets() {
-        val dialog = Dialog(this, R.style.AppTheme_Dialog)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(R.layout.dialog_assets)
-
-        userAssets?.apply {
-            var text = taelOfGold
-            text = if (text.endsWith(".0")) text.replace(".0", "") else text
-            dialog.et_tael_of_gold.setText(text)
-            dialog.et_usd.setText(usd)
-            dialog.et_saving_money.setText(savingMoney)
-        } ?: dialog.et_tael_of_gold.requestFocus()
-
-        dialog.btn_clear.setOnClickListener {
-            DataProvider.setUserAssets(null)
-            userAssets = null
-            updateUserAssetsUi()
-            dialog.dismiss()
-        }
-        dialog.btn_complete.setOnClickListener {
-            val newTaelOfGold = dialog.et_tael_of_gold.getNumberString()
-            val newUsd = dialog.et_usd.getNumberString()
-            val newSavingMoney = dialog.et_saving_money.getNumberString()
-
-            userAssets = userAssets?.apply {
-                taelOfGold = newTaelOfGold
-                usd = newUsd
-                savingMoney = newSavingMoney
-            } ?: UserAssets(newTaelOfGold, newUsd, newSavingMoney)
-
-            DataProvider.setUserAssets(userAssets)
-            updateUserAssetsUi()
-            dialog.dismiss()
-        }
-        dialog.show()
+        CollectUserAssetsDialog(
+            this, userAssets,
+            object : CollectUserAssetsDialog.OnSaveListener {
+                override fun onSave(userAssets: UserAssets?) {
+                    this@MainActivity.userAssets = userAssets
+                    updateUserAssetsUi()
+                }
+            }).show()
     }
 
     private fun share(v: View) {

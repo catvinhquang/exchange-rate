@@ -15,4 +15,7 @@
     <string name="vnd">VNĐ</string>
     <string name="clear">Xóa</string>
     <string name="complete">Hoàn tất</string>
+    <string name="discard_changes">Bạn muốn hủy bỏ thay đổi?</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
 </resources>
