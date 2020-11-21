@@ -115,8 +115,25 @@ class NumberEditText : AppCompatEditText {
         }
 
         val d = s.replace(thousandSeparator, "").toBigDecimal()
+        var output = d.toPlainString()
 
-        return d.toPlainString()
+        val isDecimal = output.contains(decimalSeparator)
+        if (isDecimal) {
+            val left = output.substringBefore(decimalSeparator).toBigDecimal()
+            var right = output.substringAfter(decimalSeparator)
+
+            while (right.endsWith("0")) {
+                right = right.dropLast(1)
+            }
+
+            output = if (right.isEmpty()) {
+                left.toPlainString()
+            } else {
+                left.toPlainString() + decimalSeparator + right
+            }
+        }
+
+        return output
     }
 
 }

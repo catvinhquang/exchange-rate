@@ -114,22 +114,22 @@ class MainActivity : AppCompatActivity() {
             it.apply {
                 updateIcon(
                     tv_global_buying_price,
-                    globalBuyingPrice.toNumberString(),
+                    globalBuyingPrice.withSeparators(),
                     globalBuyingPriceUp
                 )
                 updateIcon(
                     tv_global_selling_price,
-                    globalSellingPrice.toNumberString(),
+                    globalSellingPrice.withSeparators(),
                     globalSellingPriceUp
                 )
                 updateIcon(
                     tv_local_buying_price,
-                    localBuyingPrice.toNumberString(),
+                    localBuyingPrice.withSeparators(),
                     localBuyingPriceUp
                 )
                 updateIcon(
                     tv_local_selling_price,
-                    localSellingPrice.toNumberString(),
+                    localSellingPrice.withSeparators(),
                     localSellingPriceUp
                 )
 
@@ -143,12 +143,12 @@ class MainActivity : AppCompatActivity() {
             it.apply {
                 updateIcon(
                     tv_buying_price,
-                    buyingPrice.toNumberString(),
+                    buyingPrice.withSeparators(),
                     buyingPriceUp
                 )
                 updateIcon(
                     tv_selling_price,
-                    sellingPrice.toNumberString(),
+                    sellingPrice.withSeparators(),
                     sellingPriceUp
                 )
 
@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity() {
                 BigDecimal(x).multiply(BigDecimal(taelOfGold)) +
                         BigDecimal(y).multiply(BigDecimal(usd)) +
                         BigDecimal(savingMoney)
-            }.toNumberString()
+            }.withSeparators()
 
             tv_user_assets.text = value
             layout_user_assets.visibility = View.VISIBLE
