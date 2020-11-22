@@ -8,11 +8,14 @@ import com.google.gson.annotations.SerializedName
 
 class UserAssets(
     @SerializedName("tael_of_gold")
-    var taelOfGold: Double = 0.0,
+    var taelOfGold: String,
 
     @SerializedName("usd")
-    var usd: Int = 0,
+    var usd: String,
 
     @SerializedName("saving_money")
-    var savingMoney: Int = 0
+    var savingMoney: String,
+
+    @SerializedName("visible")
+    var visible: Boolean = true
 )
