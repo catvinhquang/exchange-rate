@@ -67,3 +67,7 @@ fun Long.toTimeString(format: String): String {
 fun toPx(dp: Float): Int {
     return (Resources.getSystem().displayMetrics.density * dp).toInt()
 }
+
+fun now(): Long {
+    return System.currentTimeMillis()
+}

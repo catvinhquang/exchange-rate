@@ -4,9 +4,10 @@
     android:id="@+id/layout_table"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
     android:animateLayoutChanges="true"
+    android:background="@android:color/white"
     android:orientation="vertical"
+    android:padding="8dp"
     tools:layout_gravity="center">
 
     <LinearLayout
@@ -28,6 +29,7 @@
                     android:id="@+id/btn_chest"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:background="@drawable/ripple_button_chest"
                     android:src="@drawable/ic_chest" />
 
                 <TextView
@@ -135,7 +137,9 @@
         android:id="@+id/layout_user_assets"
         android:layout_width="match_parent"
         android:layout_height="@dimen/row_height"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <TextView
             style="@style/Cell.Header"
@@ -150,4 +154,8 @@
             android:textStyle="bold"
             tools:text="xxx,xxx,xxx" />
     </LinearLayout>
+
+    <include
+        android:id="@+id/cv_gold_price"
+        layout="@layout/view_gold_price_chart" />
 </LinearLayout>

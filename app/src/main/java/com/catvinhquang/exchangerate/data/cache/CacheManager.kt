@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.catvinhquang.exchangerate.data.sharedmodel.UserAssets
 import com.catvinhquang.exchangerate.toJson
 import com.catvinhquang.exchangerate.toObject
+import org.json.JSONObject
 
 /**
  * Created by QuangCV on 13-Aug-2020
@@ -24,8 +25,8 @@ object CacheManager {
     private const val KEY_USD_BUYING_PRICE_UP = "KEY_USD_BUYING_PRICE_UP"
     private const val KEY_USD_SELLING_PRICE = "KEY_USD_SELLING_PRICE"
     private const val KEY_USD_SELLING_PRICE_UP = "KEY_USD_SELLING_PRICE_UP"
-
     private const val KEY_USER_ASSETS = "KEY_USER_ASSETS"
+    private const val KEY_GOLD_PRICE_HISTORY = "KEY_GOLD_PRICE_HISTORY"
 
     private lateinit var sp: SharedPreferences
 
@@ -64,15 +65,7 @@ object CacheManager {
 
     var goldGlobalBuyingPrice
         get() = get(KEY_GOLD_GLOBAL_BUYING_PRICE, 0F)
-        set(value) {
-            val old = goldGlobalBuyingPrice
-            put(KEY_GOLD_GLOBAL_BUYING_PRICE, value)
-            goldGlobalBuyingPriceUp = when {
-                value > old -> true
-                value == old -> goldGlobalBuyingPriceUp
-                else -> false
-            }
-        }
+        set(value) = put(KEY_GOLD_GLOBAL_BUYING_PRICE, value)
 
     var goldGlobalBuyingPriceUp
         get() = get(KEY_GOLD_GLOBAL_BUYING_PRICE_UP, true)
@@ -80,15 +73,7 @@ object CacheManager {
 
     var goldGlobalSellingPrice
         get() = get(KEY_GOLD_GLOBAL_SELLING_PRICE, 0F)
-        set(value) {
-            val old = goldGlobalSellingPrice
-            put(KEY_GOLD_GLOBAL_SELLING_PRICE, value)
-            goldGlobalSellingPriceUp = when {
-                value > old -> true
-                value == old -> goldGlobalSellingPriceUp
-                else -> false
-            }
-        }
+        set(value) = put(KEY_GOLD_GLOBAL_SELLING_PRICE, value)
 
     var goldGlobalSellingPriceUp
         get() = get(KEY_GOLD_GLOBAL_SELLING_PRICE_UP, true)
@@ -96,15 +81,7 @@ object CacheManager {
 
     var goldLocalBuyingPrice
         get() = get(KEY_GOLD_LOCAL_BUYING_PRICE, 0)
-        set(value) {
-            val old = goldLocalBuyingPrice
-            put(KEY_GOLD_LOCAL_BUYING_PRICE, value)
-            goldLocalBuyingPriceUp = when {
-                value > old -> true
-                value == old -> goldLocalBuyingPriceUp
-                else -> false
-            }
-        }
+        set(value) = put(KEY_GOLD_LOCAL_BUYING_PRICE, value)
 
     var goldLocalBuyingPriceUp
         get() = get(KEY_GOLD_LOCAL_BUYING_PRICE_UP, true)
@@ -112,15 +89,7 @@ object CacheManager {
 
     var goldLocalSellingPrice
         get() = get(KEY_GOLD_LOCAL_SELLING_PRICE, 0)
-        set(value) {
-            val old = goldLocalSellingPrice
-            put(KEY_GOLD_LOCAL_SELLING_PRICE, value)
-            goldLocalSellingPriceUp = when {
-                value > old -> true
-                value == old -> goldLocalSellingPriceUp
-                else -> false
-            }
-        }
+        set(value) = put(KEY_GOLD_LOCAL_SELLING_PRICE, value)
 
     var goldLocalSellingPriceUp
         get() = get(KEY_GOLD_LOCAL_SELLING_PRICE_UP, true)
@@ -128,15 +97,7 @@ object CacheManager {
 
     var usdBuyingPrice
         get() = get(KEY_USD_BUYING_PRICE, 0)
-        set(value) {
-            val old = usdBuyingPrice
-            put(KEY_USD_BUYING_PRICE, value)
-            usdBuyingPriceUp = when {
-                value > old -> true
-                value == old -> usdBuyingPriceUp
-                else -> false
-            }
-        }
+        set(value) = put(KEY_USD_BUYING_PRICE, value)
 
     var usdBuyingPriceUp
         get() = get(KEY_USD_BUYING_PRICE_UP, true)
@@ -144,15 +105,7 @@ object CacheManager {
 
     var usdSellingPrice
         get() = get(KEY_USD_SELLING_PRICE, 0)
-        set(value) {
-            val old = usdSellingPrice
-            put(KEY_USD_SELLING_PRICE, value)
-            usdSellingPriceUp = when {
-                value > old -> true
-                value == old -> usdSellingPriceUp
-                else -> false
-            }
-        }
+        set(value) = put(KEY_USD_SELLING_PRICE, value)
 
     var usdSellingPriceUp
         get() = get(KEY_USD_SELLING_PRICE_UP, true)
@@ -170,6 +123,20 @@ object CacheManager {
         set(value) = run {
             val json = value?.toJson()
             put(KEY_USER_ASSETS, json)
+        }
+
+    var goldPriceHistory
+        get() = run {
+            val json = get(KEY_GOLD_PRICE_HISTORY, "")
+            if (json.isBlank()) {
+                null
+            } else {
+                JSONObject(json)
+            }
+        }
+        set(value) = run {
+            val json = value?.toString()
+            put(KEY_GOLD_PRICE_HISTORY, json)
         }
 
 }

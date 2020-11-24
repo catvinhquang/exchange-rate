@@ -18,4 +18,5 @@
     <string name="discard_changes">Bạn muốn hủy bỏ thay đổi?</string>
     <string name="yes">Có</string>
     <string name="no">Không</string>
+    <string name="dialog_share_confirmation">Bạn muốn chia sẻ thông tin tài sản?</string>
 </resources>
