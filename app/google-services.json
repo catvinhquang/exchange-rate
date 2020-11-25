@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "958580570985",
+    "firebase_url": "https://catvinhquang-exchangerate.firebaseio.com",
+    "project_id": "catvinhquang-exchangerate",
+    "storage_bucket": "catvinhquang-exchangerate.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:958580570985:android:e87a2f5b1967a56b329bf8",
+        "android_client_info": {
+          "package_name": "com.catvinhquang.exchangerate"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "958580570985-a18g6hgbgfuke77u3vgbntl9itd0c3v3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.catvinhquang.exchangerate",
+            "certificate_hash": "220ce9dd5919f4b442e6b831a9e9b1ecf3ca0c56"
+          }
+        },
+        {
+          "client_id": "958580570985-pvu3s8ptfotj22ite093faeas4j1lrns.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDotZG-1nP3nbNMDBJnOHOEMYnQzM1I754"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "958580570985-pvu3s8ptfotj22ite093faeas4j1lrns.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
