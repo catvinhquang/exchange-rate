@@ -6,6 +6,7 @@
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
     android:background="@android:color/white"
+    android:keepScreenOn="true"
     android:orientation="vertical"
     android:padding="8dp"
     tools:layout_gravity="center">
