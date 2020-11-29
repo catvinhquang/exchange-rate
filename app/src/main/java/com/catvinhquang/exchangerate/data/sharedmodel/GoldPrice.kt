@@ -16,6 +16,8 @@ class GoldPrice(
     var localBuyingPriceUp = true
     var localSellingPriceUp = true
 
+    var fromNetwork = false
+
     override fun toString(): String {
         return "globalBuyingPrice = $globalBuyingPrice, " +
                 "globalBuyingPriceUp = $globalBuyingPriceUp, " +

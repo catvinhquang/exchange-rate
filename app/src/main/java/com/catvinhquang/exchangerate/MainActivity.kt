@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -18,6 +19,7 @@ import com.catvinhquang.exchangerate.data.sharedmodel.GoldPrice
 import com.catvinhquang.exchangerate.data.sharedmodel.UsdPrice
 import com.catvinhquang.exchangerate.data.sharedmodel.UserAssets
 import com.catvinhquang.exchangerate.dialogs.CollectUserAssetsDialog
+import com.catvinhquang.exchangerate.view.GoldPriceChartView
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -26,6 +28,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.io.FileOutputStream
 import java.math.BigDecimal
+import java.util.*
 
 /**
  * Created by QuangCV on 14-Jul-2020
@@ -41,6 +44,8 @@ class MainActivity : AppCompatActivity() {
     private var goldPrice: GoldPrice? = null
     private var usdPrice: UsdPrice? = null
     private var userAssets: UserAssets? = null
+
+    private lateinit var cvGoldPrice: GoldPriceChartView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,25 +83,40 @@ class MainActivity : AppCompatActivity() {
 
                     override fun onLongPress(e: MotionEvent) {
                         layout_table.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-
-                        layout_price.apply {
-                            val rect = Rect(left, top, width, height)
-                            if (rect.contains(e.x.toInt(), e.y.toInt())) {
-                                share(this)
-                                return
-                            }
+                        if (layout_user_assets.visibility == View.VISIBLE) {
+                            AlertDialog.Builder(this@MainActivity)
+                                .setMessage(R.string.dialog_share_confirmation)
+                                .setPositiveButton(R.string.yes) { _, _ -> share(layout_table) }
+                                .setNegativeButton(R.string.no, null)
+                                .show()
+                        } else {
+                            share(layout_table)
                         }
-
-                        share(layout_table)
                     }
 
                     override fun onDoubleTap(e: MotionEvent): Boolean {
-                        userAssets?.apply {
-                            visible = !visible
-                            DataProvider.setUserAssets(userAssets)
-                            updateUserAssetsUi()
+                        var isValid = false
+                        layout_price.apply {
+                            val rect = Rect(left, top, right, bottom)
+                            if (rect.contains(e.x.toInt(), e.y.toInt())) {
+                                isValid = true
+                            }
                         }
-                        return true
+                        layout_user_assets.apply {
+                            val rect = Rect(left, top, right, bottom)
+                            if (rect.contains(e.x.toInt(), e.y.toInt())) {
+                                isValid = true
+                            }
+                        }
+                        if (isValid) {
+                            userAssets?.apply {
+                                visible = !visible
+                                DataProvider.setUserAssets(userAssets)
+                                updateUserAssetsUi()
+                            }
+                            return true
+                        }
+                        return false
                     }
                 })
 
@@ -107,6 +127,8 @@ class MainActivity : AppCompatActivity() {
         })
 
         btn_chest.setOnClickListener { collectUserAssets() }
+
+        cvGoldPrice = cv_gold_price as GoldPriceChartView
     }
 
     private fun loadData() {
@@ -133,8 +155,12 @@ class MainActivity : AppCompatActivity() {
                     localSellingPriceUp
                 )
 
-                goldPrice = it
+                goldPrice = this
                 updateUserAssetsUi()
+
+                if (fromNetwork) {
+                    cvGoldPrice.updateCurrentEntry(this)
+                }
             }
         }
         compositeDisposable.add(getGoldPrice)
@@ -159,12 +185,15 @@ class MainActivity : AppCompatActivity() {
         compositeDisposable.add(getUsdPrice)
 
         val getUserAssets = DataProvider.getUserAssets().subscribe {
-            it.apply {
-                userAssets = it
-                updateUserAssetsUi()
-            }
+            userAssets = it
+            updateUserAssetsUi()
         }
         compositeDisposable.add(getUserAssets)
+
+        val getGoldPriceHistory = DataProvider.getGoldPriceHistory().subscribe {
+            cvGoldPrice.setData(it)
+        }
+        compositeDisposable.add(getGoldPriceHistory)
     }
 
     private fun updateUserAssetsUi() {
@@ -197,14 +226,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun share(v: View) {
-        tv_time.text = System.currentTimeMillis().toTimeString("dd-MM-yyyy\nHH:mm:ss")
+        tv_time.text = now().toTimeString("dd-MM-yyyy\nHH:mm:ss")
 
         val disposable = Observable.fromCallable {
             // export bitmap from view
             val bitmapTime = tv_time.getBitmap()
             val bitmapResult = v.getBitmap()
             val canvas = Canvas(bitmapResult)
-            canvas.drawBitmap(bitmapTime, 0F, 0F, null)
+            canvas.drawBitmap(
+                bitmapTime,
+                layout_price.left.toFloat(),
+                layout_price.top.toFloat(),
+                null
+            )
 
             // save bitmap to cache directory
             val folder = File(cacheDir, "images")
