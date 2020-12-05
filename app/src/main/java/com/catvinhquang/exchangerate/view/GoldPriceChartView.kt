@@ -101,40 +101,26 @@ class GoldPriceChartView(context: Context, attrs: AttributeSet?) : LinearLayout(
             val vGsp = ArrayList<Entry>()
             val vLbp = ArrayList<Entry>()
             val vLsp = ArrayList<Entry>()
-            var days = 0
             for (i in 1..90) {
                 val time = calendar.time.time
                 val key = time.toTimeString("dd-MM-yyyy")
                 val item = optJSONObject(key)
-                val x = time.toFloat()
 
-                val yGbp = item?.optString("gbp")?.toFloat() ?: 0F
-                vGbp.add(0, Entry(x, yGbp))
-                val yGsp = item?.optString("gsp")?.toFloat() ?: 0F
-                vGsp.add(0, Entry(x, yGsp))
-                val yLbp = item?.optString("lbp")?.toFloat() ?: 0F
-                vLbp.add(0, Entry(x, yLbp))
-                val yLsp = item?.optString("lsp")?.toFloat() ?: 0F
-                vLsp.add(0, Entry(x, yLsp))
-
-                if (yGbp != 0F || yGsp != 0F || yLbp != 0F || yLsp != 0F) {
-                    days = i
+                item?.apply {
+                    val x = time.toFloat()
+                    val yGbp = optString("gbp").toFloat()
+                    val yGsp = optString("gsp").toFloat()
+                    val yLbp = optString("lbp").toFloat()
+                    val yLsp = optString("lsp").toFloat()
+                    if (yGbp != 0F && yGsp != 0F && yLbp != 0F && yLsp != 0F) {
+                        vGbp.add(0, Entry(x, yGbp))
+                        vGsp.add(0, Entry(x, yGsp))
+                        vLbp.add(0, Entry(x, yLbp))
+                        vLsp.add(0, Entry(x, yLsp))
+                    }
                 }
 
                 calendar.add(Calendar.DATE, -1)
-            }
-
-            val max = when {
-                days <= 7 -> 7
-                days <= 30 -> 30
-                days <= 60 -> 60
-                else -> 90
-            }
-            while (vGbp.size != max) {
-                vGbp.removeFirst()
-                vGsp.removeFirst()
-                vLbp.removeFirst()
-                vLsp.removeFirst()
             }
 
             val sColor = Color.parseColor("#e34334")
