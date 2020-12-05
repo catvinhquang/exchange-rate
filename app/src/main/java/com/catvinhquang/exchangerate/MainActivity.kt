@@ -67,6 +67,11 @@ class MainActivity : AppCompatActivity() {
         loadData()
     }
 
+    override fun onResume() {
+        super.onResume()
+        startService(Intent(this, GetGoldPriceService::class.java))
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.clear()

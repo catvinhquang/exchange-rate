@@ -19,7 +19,9 @@
     <string name="yes">Có</string>
     <string name="no">Không</string>
     <string name="dialog_share_confirmation">Bạn muốn chia sẻ thông tin tài sản?</string>
-    <string name="notification_title">Cập nhật giá vàng</string>
+    <string name="update_gold_price">Cập nhật giá vàng</string>
     <string name="notification_short_content">TG: %s / %s - VN: %s / %s</string>
     <string name="notification_full_content">Thế giới: %s / %s\nTrong nước: %s / %s</string>
+    <string name="loading">Đang tải…</string>
+    <string name="turn_off_notification">Tắt thông báo</string>
 </resources>

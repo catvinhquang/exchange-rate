@@ -30,7 +30,7 @@ object DataProvider {
         NetworkManager.init()
     }
 
-    fun getGoldPrice(): Observable<GoldPrice> {
+    fun getGoldPrice(intervalInSeconds: Long = updateIntervalInSeconds): Observable<GoldPrice> {
         return Observable.create<GoldPrice> { emitter ->
             val cache = GoldPrice(
                 CacheManager.goldGlobalBuyingPrice,
@@ -46,7 +46,7 @@ object DataProvider {
             emitter.onNext(cache)
             Log.d(TAG, "getGoldPrice: [cache] $cache")
 
-            Observable.interval(0, updateIntervalInSeconds, TimeUnit.SECONDS)
+            Observable.interval(0, intervalInSeconds, TimeUnit.SECONDS)
                 .takeUntil { emitter.isDisposed }
                 .flatMap { NetworkManager.getGoldPrice() }
                 .subscribe {
@@ -122,7 +122,7 @@ object DataProvider {
         CacheManager.userAssets = value
     }
 
-    fun saveNewGoldPrice(newPrice: GoldPrice) {
+    private fun saveNewGoldPrice(newPrice: GoldPrice) {
         newPrice.globalBuyingPriceUp = when {
             newPrice.globalBuyingPrice > CacheManager.goldGlobalBuyingPrice -> true
             newPrice.globalBuyingPrice == CacheManager.goldGlobalBuyingPrice -> CacheManager.goldGlobalBuyingPriceUp
