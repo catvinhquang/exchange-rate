@@ -6,6 +6,7 @@ import android.text.method.DigitsKeyListener
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatEditText
 import java.text.DecimalFormat
+import kotlin.math.max
 
 /**
  * Created by QuangCV on 17-Nov-2020
@@ -30,7 +31,7 @@ class NumberEditText : AppCompatEditText {
         text: CharSequence, start: Int,
         lengthBefore: Int, lengthAfter: Int
     ) {
-        if (validate()) {
+        if (shouldFormat()) {
             format(false)
         }
     }
@@ -40,12 +41,7 @@ class NumberEditText : AppCompatEditText {
         format(true)
     }
 
-    override fun onSelectionChanged(selStart: Int, selEnd: Int) {
-        super.onSelectionChanged(selStart, selEnd)
-        setSelection(length())
-    }
-
-    private fun validate(): Boolean {
+    private fun shouldFormat(): Boolean {
         val input = text.toString()
 
         if (input.isEmpty()) {
@@ -53,18 +49,18 @@ class NumberEditText : AppCompatEditText {
         }
 
         if (input.startsWith("0") && input.length > 1 && input[1].toString() != decimalSeparator) {
-            setText(input.drop(1))
+            setTextAndKeepSelection(input.drop(1))
             return false
         }
 
         if (input == decimalSeparator) {
-            setText("")
+            setTextAndKeepSelection("")
             return false
         }
 
         if (input.endsWith(decimalSeparator)) {
             if (input.count { it == decimalSeparator.single() } > 1) {
-                setText(input.dropLast(1))
+                setTextAndKeepSelection(input.dropLast(1))
             }
             return false
         }
@@ -103,8 +99,17 @@ class NumberEditText : AppCompatEditText {
         }
 
         if (input != output) {
-            setText(output)
+            setTextAndKeepSelection(output)
         }
+    }
+
+    private fun setTextAndKeepSelection(content: String) {
+        var charsOnRight = 0
+        if (text != null) {
+            charsOnRight = max(text!!.length - selectionEnd, 0)
+        }
+        setText(content)
+        setSelection(content.length - charsOnRight)
     }
 
     fun getNumberString(): String {
