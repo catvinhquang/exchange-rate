@@ -15,7 +15,6 @@ import java.net.UnknownHostException
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.util.regex.Pattern
-import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
 
@@ -36,58 +35,47 @@ object NetworkManager {
         bankService = initBankService()
     }
 
+    private fun initBuilder(): OkHttpClient.Builder {
+        val builder = OkHttpClient.Builder()
+
+        // Create a trust manager that does not validate certificate chains
+        val manager = object : X509TrustManager {
+            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+
+            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        }
+
+        // Install the all-trusting trust manager
+        val sslContext = SSLContext.getInstance("SSL")
+        sslContext.init(null, arrayOf(manager), SecureRandom())
+
+        // Create an ssl socket factory with our all-trusting manager
+        val sslSocketFactory = sslContext.socketFactory
+
+        builder.sslSocketFactory(sslSocketFactory, manager)
+        builder.hostnameVerifier { _, _ -> true }
+        return builder
+    }
+
     private fun initGoldService(): GoldService {
         val client = if (showLog) {
             val loggingInterceptor = HttpLoggingInterceptor()
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
-            OkHttpClient.Builder().addInterceptor(loggingInterceptor).build()
+            initBuilder().addInterceptor(loggingInterceptor).build()
         } else {
-            OkHttpClient.Builder().build()
+            initBuilder().build()
         }
         val retrofit = Retrofit.Builder()
             .client(client)
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .baseUrl("http://www.sjc.com.vn/")
             .build()
-        return retrofit.create<GoldService>(GoldService::class.java)
+        return retrofit.create(GoldService::class.java)
     }
 
     private fun initBankService(): BankService {
-        fun initBuilder(): OkHttpClient.Builder {
-            val builder = OkHttpClient.Builder()
-            try {
-                // Create a trust manager that does not validate certificate chains
-                val manager = object : X509TrustManager {
-                    override fun checkClientTrusted(
-                        chain: Array<X509Certificate>,
-                        authType: String
-                    ) {
-                    }
-
-                    override fun checkServerTrusted(
-                        chain: Array<X509Certificate>,
-                        authType: String
-                    ) {
-                    }
-
-                    override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-                }
-
-                // Install the all-trusting trust manager
-                val sslContext = SSLContext.getInstance("SSL")
-                sslContext.init(null, arrayOf(manager), SecureRandom())
-
-                // Create an ssl socket factory with our all-trusting manager
-                val sslSocketFactory = sslContext.socketFactory
-
-                builder.sslSocketFactory(sslSocketFactory, manager)
-                builder.hostnameVerifier(HostnameVerifier { _, _ -> true })
-            } catch (t: Throwable) {
-                t.printStackTrace()
-            }
-            return builder
-        }
-
         val client = if (showLog) {
             val loggingInterceptor = HttpLoggingInterceptor()
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
@@ -100,7 +88,7 @@ object NetworkManager {
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .baseUrl("https://portal.vietcombank.com.vn/")
             .build()
-        return retrofit.create<BankService>(BankService::class.java)
+        return retrofit.create(BankService::class.java)
     }
 
     fun getGoldPrice(): Observable<GoldPrice> {
